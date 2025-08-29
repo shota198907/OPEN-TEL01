@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI電話受付システム</title>
+  <meta name="description" content="WebRTC + OpenAI Realtime によるAI電話受付" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>AI電話受付システム</h1>
+    <div class="status-bar">
+      <span id="status" class="status-value">状態: 待機中</span>
+      <span class="timer-label">通話時間: <strong id="timer">00:00</strong></span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+      <label class="consent">
+        <input type="checkbox" id="consent-checkbox" />
+        <span>通話の録音・送信に同意します。<a href="/privacy.html" target="_blank">プライバシーポリシー</a>を確認しました。</span>
+      </label>
+      <button id="callBtn" class="btn primary">通話開始</button>
+      <button id="clearTranscript" class="btn">履歴クリア</button>
+    </section>
+
+    <section class="warnings">
+      <div id="browser-warning" class="warning" style="display:none;"></div>
+      <div class="warning">
+        <strong>サポート:</strong> Chrome/Edge推奨。Safari/iOSは自動再生制限あり。Firefoxは不安定の可能性。
+      </div>
+    </section>
+
+    <section class="transcript-section">
+      <h2>チャット表示エリア</h2>
+      <div id="transcript" class="transcript"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer"><small>© 2025 Open Tel System</small></footer>
+
+  <script src="/turn-config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

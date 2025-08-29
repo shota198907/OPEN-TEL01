@@ -1,0 +1,41 @@
+# cloud_run.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: open-tel-01
+spec:
+  template:
+    spec:
+      containers:
+      - image: asia-northeast1-docker.pkg.dev/open-tel-470509/cloud-run-source-deploy/open-tel-01@sha256:332ac508ccc8fe17c14bf6e55b6b71d72e5655ac8898475702bf04114442f27b
+        env:
+        # --- ここからが .env ファイルの内容 ---
+        - name: REALTIME_MODEL
+          value: "gpt-realtime"
+        - name: VOICE_MODEL
+          value: "verse"
+        - name: OPENAI_EPHEMERAL_ENDPOINT
+          value: "client_secrets"
+        - name: TURN_URLS
+          value: "turns:your.turn.server:443?transport=tcp"
+        - name: TURN_USERNAME
+          value: "youruser"
+        - name: TURN_CREDENTIAL
+          value: "yourpass"
+        - name: ALLOWED_VOICES
+          value: "verse,cedar,marin"
+        - name: ALLOWED_MODELS
+          value: "gpt-realtime"
+        - name: NODE_ENV
+          value: "production" # 本番環境なので production に変更
+        - name: LOG_LEVEL
+          value: "info"
+        - name: ALLOWED_ORIGINS
+          value: "https://open-tel-01-651788341861.asia-northeast1.run.app"
+        
+        # --- ここからが秘密情報（Secret Managerから読み込む設定） ---
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-api-key  # Secret Managerで作成した名前
+              key: '1'             # 最初のバージョンなので '1' を指定

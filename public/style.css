@@ -1,0 +1,45 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #22c55e;
+  --accent-weak: #16a34a;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --border: #1f2937;
+}
+* { box-sizing: border-box; } html, body { height: 100%; }
+body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: linear-gradient(180deg, #0b1220, #0f172a 40%); color: var(--text); }
+.app-header, .app-footer { padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(6px); }
+.app-footer { border-top: 1px solid var(--border); border-bottom: none; text-align: center; }
+h1, h2 { margin: 0 0 12px; }
+.container { max-width: 980px; margin: 20px auto; padding: 0 16px; }
+.status-bar { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+.status-value { padding: 4px 8px; border-radius: 6px; background: #0b1324; border: 1px solid var(--border); }
+.status-value.error { background: #2a0b0b; border-color: #3f1515; }
+.timer-label strong { color: var(--accent); }
+.controls { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
+.btn { background: #1f2937; color: var(--text); border: 1px solid var(--border); padding: 10px 16px;
+  border-radius: 10px; cursor: pointer; transition: transform .05s ease, background .2s ease, border-color .2s ease; }
+.btn:hover { background: #243045; }
+.btn.primary { background: var(--accent-weak); border-color: #0f5132; color: #062a1b; font-weight: 600; }
+.btn.primary:hover { background: var(--accent); }
+.consent { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.consent a { color: #93c5fd; text-decoration: underline; }
+.warning, .network-warning, .autoplay-warning, .time-warning {
+  background: #2b2230; border: 1px solid #4b253b; padding: 12px 14px; border-radius: 10px; color: #f3d1e7; margin-bottom: 12px; }
+.error-dialog .error-content, .autoplay-warning .warning-content {
+  background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 16px; max-width: 420px; margin: 12px auto; }
+.error-dialog .error-content h3 { margin: 0 0 8px; color: #ffd5d5; }
+.error-dialog .error-content button, .autoplay-warning .warning-content .play-button {
+  margin-top: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: #1f2937; color: var(--text); cursor: pointer; }
+.transcript-section { margin-top: 16px; }
+.transcript { border: 1px solid var(--border); background: #0b1220; border-radius: 12px; padding: 12px; height: 420px; overflow-y: auto; }
+.ai-message, .customer-message { padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+.ai-message { background: rgba(34,197,94,0.08); } .customer-message { background: rgba(59,130,246,0.08); }
+.message-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+.message-text { white-space: pre-wrap; word-wrap: break-word; }
+.app-footer small { color: var(--muted); }
