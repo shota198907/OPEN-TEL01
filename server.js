@@ -225,10 +225,7 @@ app.post('/api/token', tokenLimiter, csrfProtection, async (req, res) => {
     return res.status(500).json({ error: 'Server misconfiguration' });
   }
 
-  let body = '';
-  await new Promise(resolve => { req.on('data', c => body += c); req.on('end', resolve); });
-  let json = {};
-  try { json = JSON.parse(body || '{}'); } catch {}
+  const json = req.body || {};
 
   const voice = (json.voice || process.env.VOICE_MODEL || 'verse').trim();
   const model = (json.model || process.env.REALTIME_MODEL || 'gpt-realtime').trim();
@@ -237,7 +234,7 @@ app.post('/api/token', tokenLimiter, csrfProtection, async (req, res) => {
 
   const EPHEMERAL_PATH = process.env.OPENAI_EPHEMERAL_ENDPOINT || 'client_secrets';
   const EPHEMERAL_URL  = `https://api.openai.com/v1/realtime/${EPHEMERAL_PATH}`;
-  const sessionConfig = { session: { type: 'realtime', model, voice, modalities: ['audio'] } };
+  const sessionConfig = { session: { type: 'realtime', model } };
 
   try {
     const ac = new AbortController();
@@ -321,8 +318,7 @@ app.post('/api/sdp', sdpLimiter, csrfProtection, async (req, res) => {
       ...(process.env.OPENAI_BETA_HEADER ? { 'OpenAI-Beta': process.env.OPENAI_BETA_HEADER } : {})
     };
 
-    const upstream = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(process.env.REALTIME_MODEL || 'gpt-realtime')}`, {
-      method: 'POST', body: raw, headers
+    const upstream = await fetch(`https://api.openai.com/v1/realtime/calls?model=${encodeURIComponent(process.env.REALTIME_MODEL || 'gpt-realtime')}`, {      method: 'POST', body: raw, headers
     });
     const text = await upstream.text();
     logger.info('SDP proxied', { requestId, status: upstream.status });

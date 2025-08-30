@@ -16,12 +16,13 @@ spec:
           value: "verse"
         - name: OPENAI_EPHEMERAL_ENDPOINT
           value: "client_secrets"
-        - name: TURN_URLS
-          value: "turns:your.turn.server:443?transport=tcp"
-        - name: TURN_USERNAME
-          value: "youruser"
-        - name: TURN_CREDENTIAL
-          value: "yourpass"
+        # --- TURNサーバー設定（無効化中） ---
+        # - name: TURN_URLS
+        #   value: "turns:your.turn.server:443?transport=tcp"
+        # - name: TURN_USERNAME
+        #   value: "youruser"
+        # - name: TURN_CREDENTIAL
+        #   value: "yourpass"
         - name: ALLOWED_VOICES
           value: "verse,cedar,marin"
         - name: ALLOWED_MODELS

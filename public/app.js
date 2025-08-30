@@ -55,6 +55,7 @@ async function startCall(){
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    await getCsrfToken(); // refresh CSRF token (rotated after /api/token)
     const sdpRes = await fetch('/api/sdp', {
       method:'POST',
       headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type':'application/sdp', 'X-CSRF-Token': csrfToken||'' },
