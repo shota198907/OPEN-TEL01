@@ -1,6 +1,8 @@
 // Minimal client wiring for WebRTC + Realtime (offer→/api/sdp→answer)
 let pc=null, dc=null, audioEl=null, localStream=null;
 let csrfToken=null, tokenData=null;
+let languageOk=true;
+let userBubble=null, aiBubble=null;
 const CONNECT_DEADLINE_MS = 50_000;
 
 function log(level, msg, data={}){ console[level]({t:new Date().toISOString(), msg, ...data}); }
@@ -22,8 +24,22 @@ async function getToken(voice, model){
 }
 
 function updateStatus(s){ const el=document.getElementById('status'); if(el) el.textContent=`状態: ${s}`; }
-function updateTranscript(role, text){ const t=document.getElementById('transcript'); const d=document.createElement('div'); d.className=role==='AI'?'ai-message':'customer-message'; d.innerHTML=`<div class="message-header"><strong>${role}</strong><span>${new Date().toLocaleTimeString('ja-JP')}</span></div><div class="message-text">${text}</div>`; t.appendChild(d); t.scrollTop=t.scrollHeight; }
-
+function appendTranscript(role, text){
+  const t=document.getElementById('transcript');
+  let bubble = role==='AI'?aiBubble:userBubble;
+  if(!bubble){
+    bubble=document.createElement('div');
+    bubble.className=role==='AI'?'ai-message':'customer-message';
+    bubble.innerHTML=`<div class="message-header"><strong>${role}</strong><span>${new Date().toLocaleTimeString('ja-JP')}</span></div><div class="message-text"></div>`;
+    t.appendChild(bubble);
+    if(role==='AI') aiBubble=bubble; else userBubble=bubble;
+  }
+  bubble.querySelector('.message-text').textContent += text;
+  t.scrollTop=t.scrollHeight;
+}
+function finalizeTranscript(role){
+  if(role==='AI') aiBubble=null; else userBubble=null;
+}
 async function startCall(){
   const consent=document.getElementById('consent-checkbox'); if(!consent?.checked){ alert('同意にチェックしてください'); return; }
   try{
@@ -43,11 +59,35 @@ async function startCall(){
     }catch(e){ throw new Error('マイクエラー: '+e.message); }
 
     dc = pc.createDataChannel('oai-events',{ ordered:true, maxRetransmits:3 });
+    dc.onopen = ()=>{
+      dc.send(JSON.stringify({
+        type:'response.create',
+        response:{
+          modalities:['audio','text'],
+          instructions:'アシスタントです。ご用件をお話しください。',
+        }
+      }));
+    };
     dc.onmessage = (ev)=>{
       try{
         const data = JSON.parse(ev.data);
-        if(data.type==='response.audio_transcript.delta'){ updateTranscript('AI', data.delta); }
-        if(data.type==='response.audio_transcript.done'){ /* no-op (already appended) */ }
+        if(data.type==='input_audio_transcript.delta'){
+          if(languageOk && data.language && data.language!=='ja'){
+            languageOk=false;
+            dc.send(JSON.stringify({
+              type:'response.create',
+              response:{
+                modalities:['audio','text'],
+                instructions:'申し訳ありませんが、日本語のみ対応しています。',
+              }
+            }));
+            dc.send(JSON.stringify({type:'conversation.end'}));
+          }
+          if(data.delta) appendTranscript('お客様', data.delta);
+        }
+        if(data.type==='input_audio_transcript.done'){ finalizeTranscript('お客様'); }
+        if(data.type==='response.text.delta' && data.delta){ appendTranscript('AI', data.delta); }
+        if(data.type==='response.text.done'){ finalizeTranscript('AI'); }
       }catch{}
     };
 

@@ -234,7 +234,10 @@ app.post('/api/token', tokenLimiter, csrfProtection, async (req, res) => {
 
   const EPHEMERAL_PATH = process.env.OPENAI_EPHEMERAL_ENDPOINT || 'client_secrets';
   const EPHEMERAL_URL  = `https://api.openai.com/v1/realtime/${EPHEMERAL_PATH}`;
-  const sessionConfig = { session: { type: 'realtime', model } };
+  const instructions = process.env.SYSTEM_PROMPT ||
+  'あなたは当社の電話受付です。日本語のみを使用し、敬語で丁寧に応対してください。' +
+  '営業時間やよくある質問に回答し、対応できない場合は担当者へおつなぎします。';
+  const sessionConfig = { session: { type: 'realtime', model, instructions } };
 
   try {
     const ac = new AbortController();
