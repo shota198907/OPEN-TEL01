@@ -13,7 +13,7 @@ spec:
         - name: REALTIME_MODEL
           value: "gpt-realtime"
         - name: VOICE_MODEL
-          value: "verse"
+          value: "marin"
         - name: OPENAI_EPHEMERAL_ENDPOINT
           value: "client_secrets"
         # --- TURNサーバー設定（無効化中） ---
