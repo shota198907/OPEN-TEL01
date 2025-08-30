@@ -227,7 +227,7 @@ app.post('/api/token', tokenLimiter, csrfProtection, async (req, res) => {
 
   const json = req.body || {};
 
-  const voice = (json.voice || process.env.VOICE_MODEL || 'verse').trim();
+  const voice = (json.voice || process.env.VOICE_MODEL || 'marin').trim();
   const model = (json.model || process.env.REALTIME_MODEL || 'gpt-realtime').trim();
   if (!ALLOWED_VOICES.includes(voice)) return res.status(400).json({ error: `voice not allowed: ${voice}` });
   if (!ALLOWED_MODELS.includes(model)) return res.status(400).json({ error: `model not allowed: ${model}` });

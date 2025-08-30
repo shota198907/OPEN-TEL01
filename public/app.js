@@ -1,9 +1,11 @@
 // Minimal client wiring for WebRTC + Realtime (offer→/api/sdp→answer)
 let pc=null, dc=null, audioEl=null, localStream=null;
+let micSender=null, micTrack=null, stopVAD=null;
 let csrfToken=null, tokenData=null;
 let languageOk=true;
 let userBubble=null, aiBubble=null;
 const CONNECT_DEADLINE_MS = 50_000;
+const DEFAULT_VOICE = 'marin';
 
 function log(level, msg, data={}){ console[level]({t:new Date().toISOString(), msg, ...data}); }
 
@@ -40,11 +42,47 @@ function appendTranscript(role, text){
 function finalizeTranscript(role){
   if(role==='AI') aiBubble=null; else userBubble=null;
 }
+
+function setupVAD(stream, sender, track){
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const src = ctx.createMediaStreamSource(stream);
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 2048;
+  src.connect(analyser);
+  const data = new Uint8Array(analyser.fftSize);
+  let silentSince = Date.now();
+  let silenced = false;
+  let rafId;
+  const SILENCE_MS = 1000;
+  const THRESH = 0.01;
+
+  function check(){
+    analyser.getByteTimeDomainData(data);
+    let sum=0;
+    for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum+=v*v; }
+    const rms = Math.sqrt(sum/data.length);
+    if(rms < THRESH){
+      if(!silenced && Date.now()-silentSince > SILENCE_MS){
+        sender.replaceTrack(null);
+        silenced=true;
+      }
+    }else{
+      silentSince = Date.now();
+      if(silenced){
+        sender.replaceTrack(track);
+        silenced=false;
+      }
+    }
+    rafId = requestAnimationFrame(check);
+  }
+  check();
+  return ()=>{ cancelAnimationFrame(rafId); src.disconnect(); analyser.disconnect(); ctx.close(); };
+}
 async function startCall(){
   const consent=document.getElementById('consent-checkbox'); if(!consent?.checked){ alert('同意にチェックしてください'); return; }
   try{
     updateStatus('接続中...');
-    tokenData = await getToken();
+    tokenData = await getToken(DEFAULT_VOICE);
     const { token, ice_servers } = tokenData;
 
     pc = new RTCPeerConnection({ iceServers: ice_servers||[], iceCandidatePoolSize: 10 });
@@ -55,7 +93,9 @@ async function startCall(){
     // mic
     try{
       localStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true, sampleRate:48000 } });
-      localStream.getAudioTracks().forEach(tr=>pc.addTrack(tr, localStream));
+      micTrack = localStream.getAudioTracks()[0];
+      micSender = pc.addTrack(micTrack, localStream);
+      stopVAD = setupVAD(localStream, micSender, micTrack);
     }catch(e){ throw new Error('マイクエラー: '+e.message); }
 
     dc = pc.createDataChannel('oai-events',{ ordered:true, maxRetransmits:3 });
@@ -116,6 +156,8 @@ async function startCall(){
 function endCall(){
   if(dc){ try{dc.close();}catch{} dc=null; }
   if(pc){ try{pc.close();}catch{} pc=null; }
+  if(stopVAD){ try{stopVAD();}catch{} stopVAD=null; }
+  micSender=null; micTrack=null;
   if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
   updateStatus('待機中');
 }
